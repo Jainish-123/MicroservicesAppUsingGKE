@@ -1,0 +1,74 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: host-pv
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: standard
+  gcePersistentDisk:
+    pdName: k8s-disk
+    fsType: ext4
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: host-pvc
+spec:
+  volumeName: host-pv
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+  storageClassName: standard
+  selector:
+    matchLabels:
+      name: host-pv
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: container1-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: container1-app
+  template:
+    metadata:
+      labels:
+        app: container1-app
+    spec:
+      containers:
+        - name: container1
+          image: us-west1-docker.pkg.dev/cloud-assignment-2-428721/a3-repo1/a3image1:PLACEHOLDER_TAG
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 6000
+          volumeMounts:
+            - name: data-volume
+              mountPath: /jainish_PV_dir
+      imagePullSecrets:
+        - name: gcr-json-key
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: host-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: container1-service
+spec:
+  selector:
+    app: container1-app
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 6000
+  type: LoadBalancer

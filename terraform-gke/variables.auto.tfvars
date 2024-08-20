@@ -1,0 +1,10 @@
+gcp_credentials = "cloud-assignment-2-428721-b410dca1ddce.json"
+gcp_project_id = "cloud-assignment-2-428721"
+gcp_region = "us-west1"
+gke_cluster_name = "assignment-2-gke-cluster"
+gke_zones = ["us-west1-a"]
+gke_regional = false
+gke_network = "default"
+gke_subnetwork = "default"
+gke_service_account_name = "terraform-sa@cloud-assignment-2-428721.iam.gserviceaccount.com"
+gke_default_nodepool_name = "assignment-2-pool"

@@ -1,0 +1,46 @@
+steps:
+  - id: "docker-build"
+    name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "build",
+        "-t",
+        "us-west1-docker.pkg.dev/cloud-assignment-2-428721/a3-repo1/a3image2:${SHORT_SHA}",
+        ".",
+      ]
+
+  - id: "push-docker-build"
+    name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "push",
+        "us-west1-docker.pkg.dev/cloud-assignment-2-428721/a3-repo1/a3image2:${SHORT_SHA}",
+      ]
+    waitFor: ["docker-build"]
+
+  - id: "prepare-deployment"
+    name: "gcr.io/cloud-builders/gcloud"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        sed -i 's|PLACEHOLDER_TAG|${SHORT_SHA}|' container_2_deployment.yml
+
+  - id: "deploy-docker-build"
+    name: "gcr.io/cloud-builders/gcloud"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        gcloud container clusters get-credentials assignment-2-gke-cluster --zone us-west1-a &&
+        kubectl apply -f container_2_deployment.yml
+    waitFor: ["prepare-deployment"]
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+substitutions:
+  _SHORT_SHA: ${SHORT_SHA}
+
+images:
+  - us-west1-docker.pkg.dev/cloud-assignment-2-428721/a3-repo1/a3image2:${SHORT_SHA}
